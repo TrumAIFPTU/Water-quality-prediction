@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class NLinear(nn.Module):
     def __init__(self, seq_len, pred_len):
         super().__init__()

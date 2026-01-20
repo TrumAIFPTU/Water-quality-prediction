@@ -1,6 +1,7 @@
 import torch 
 import torch.nn as nn
 
+
 class CALinear(nn.Module):
     """CALinear with multi-feature support"""
     def __init__(self, seq_len, pred_len, n_features=3):

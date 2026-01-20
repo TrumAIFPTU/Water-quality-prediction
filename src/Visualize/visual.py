@@ -234,6 +234,19 @@ def plot_runtime_and_stability(save_runtime="runtime_comparison.png",
 
     📊 Runtime & Stability Visualization
     """
+    name_map = {
+    "NLinear": "NLinear",
+    "DLinear": "DLinear",
+    "CALinear": "CA",
+    "Ablation-Baseline": "Abl-Base",
+    "Ablation-Feature": "Abl-Feat",
+    "Ablation-Event": "Abl-Event",
+    "Alpha-1.0": "α=1.0",
+    "Alpha-3.0": "α=3.0",
+    "Alpha-5.0": "α=5.0",
+    }
+    
+
     print(f"\n📊 Creating Runtime & Stability plots...")
 
     df_runtime = pd.DataFrame(RUNTIME_LOG)
@@ -243,7 +256,7 @@ def plot_runtime_and_stability(save_runtime="runtime_comparison.png",
     df_runtime_agg = df_runtime.groupby(['Stage', 'Model', 'Unit'], as_index=False)['Time_s'].mean()
 
     # 1. Runtime Comparison
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(18, 6))
     fig.suptitle("Runtime Benchmark Report (v3.6 Fixed)", fontsize=16, fontweight='bold')
 
     # Training time
@@ -267,11 +280,11 @@ def plot_runtime_and_stability(save_runtime="runtime_comparison.png",
 
         x = np.arange(len(models))
         width = 0.35
-
+        models_short = [name_map.get(m, m) for m in models]
         axes[1].bar(x - width/2, infer_times, width, label='Inference', color='lightgreen')
         axes[1].bar(x + width/2, xai_times, width, label='XAI', color='coral')
         axes[1].set_xticks(x)
-        axes[1].set_xticklabels(models)
+        axes[1].set_xticklabels(models_short , rotation=30, ha='right', fontsize=9)
         axes[1].set_ylabel("Time (ms/sample)")
         axes[1].set_title("Inference & XAI Time")
         axes[1].legend()

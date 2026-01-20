@@ -1,0 +1,4 @@
+Model,Noise_Robustness_Spearman,Perturbation_Consistency_Jaccard,Attribution_Variance,N_Samples
+NLinear,0.8771478260869563,0.95,2.64553e-05,10
+DLinear,0.9017913043478261,0.86,2.0450181e-05,10
+CALinear,0.39627826086956525,0.7819999999999999,2.2948012e-05,10
