@@ -34,6 +34,7 @@ def data_processing():
     print("Sample Residue:", [c for c in cols if 'residue' in c][:2])
     print("Sample Event:", [c for c in cols if 'event_flag' in c][:2])
     df_final.to_csv(DATA_DIR/"New_data/Training_data/Final_Processed_Data.csv", index=False)
+
 def main():
     print("="*80)
     print("WATER QUALITY FORECASTING")

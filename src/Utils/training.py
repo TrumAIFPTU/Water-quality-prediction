@@ -163,5 +163,9 @@ def evaluate_model(model, loader, device, split_info):
         "R2": r2, 
         "MAPE": mape,
         "SF_MAE": sf_mae, 
-        "N_Events": len(event_indices)
+        "N_Events": len(event_indices),
+        "raw_data": {
+            "preds": preds_total,    
+            "actuals": actuals_total
+        }
     }

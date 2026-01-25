@@ -2,8 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-from src.Utils.path import OUTPUT_DIR
-
+import numpy as np
+import torch
+from src.Utils.path import OUTPUT_DIR,DATA_DIR
+from src.Model.Linear import DLinear,NLinear,LTSF_Linear
+from src.Utils.parameter import CONFIG,device
+from src.Utils.training import evaluate_model
+from src.Data.data_loading import create_dataloaders_advanced
 # Cấu hình giao diện biểu đồ
 sns.set_theme(style="whitegrid")
 plt.rcParams.update({'figure.figsize': (10, 6), 'figure.dpi': 150})
@@ -135,6 +140,51 @@ def plot_stability():
     
     save_plot("stability_analysis.png")
 
+def plot_all_targets_sample(y_true, y_pred, target_names, sample_idx=0):
+    
+    num_targets = len(target_names)
+    # Tạo lưới biểu đồ (3 hàng, 2 cột cho 6 targets)
+    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(15, 12))
+    axes = axes.flatten() # Trải phẳng để lặp dễ hơn
+
+    for i in range(num_targets):
+        true_series = y_true[sample_idx, :, i]
+        pred_series = y_pred[sample_idx, :, i]
+        
+        ax = axes[i]
+        ax.plot(true_series, label="Thực tế", color="#2ecc71", linewidth=2, marker='o', markersize=3)
+        ax.plot(pred_series, label="Dự báo", color="#e74c3c", linestyle="--", linewidth=2, marker='x', markersize=3)
+        
+        ax.set_title(f"Thông số: {target_names[i]}", fontsize=12, fontweight='bold')
+        ax.set_xlabel("Bước dự báo (giờ)")
+        ax.set_ylabel("Giá trị")
+        ax.legend(fontsize='small')
+        ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    save_plot(f"all_targets_sample_{sample_idx}.png")
+    
+
+def plot_top_features_shap(shap_matrix, feature_names, top_n=15):
+    """
+    Trích xuất và vẽ Top N đặc trưng quan trọng nhất từ ma trận SHAP (2D: Time, Features)
+    """
+    # Tính trung bình cộng tác động của mỗi feature qua tất cả các bước thời gian
+    feature_impact = np.mean(shap_matrix, axis=0) 
+    
+    # Tạo DataFrame để dễ sắp xếp
+    df_feat = pd.DataFrame({
+        'Feature': feature_names,
+        'Importance': feature_impact
+    }).sort_values(by='Importance', ascending=False).head(top_n)
+
+    plt.figure(figsize=(8, 8))
+    sns.barplot(data=df_feat, x="Importance", y="Feature", palette="Blues_d")
+    
+    plt.title(f"Top {top_n} Most Influential Features (Global SHAP)", fontsize=14, fontweight='bold')
+    plt.xlabel("Mean |SHAP Value| (Impact on Model Output)")
+    
+    save_plot("top_features_importance.png")
 def plot_all():
     print("\nGENERATING PLOTS...")
     plot_model_comparison()
@@ -143,4 +193,22 @@ def plot_all():
     plot_alpha()
     plot_ablation()
     plot_stability()
+
+    df = pd.read_csv(DATA_DIR/"New_data/Training_data/Final_Processed_Data.csv")
+    loaders,_,split_info = loaders, _, info = create_dataloaders_advanced(df, CONFIG['targets'], CONFIG['seq_len'], CONFIG['pred_len'], CONFIG['batch_size'])
+    train_loader, val_loader, test_loader = loaders
+    model = DLinear(87,6,CONFIG['seq_len'],CONFIG['pred_len'],device)
+    model_path = OUTPUT_DIR/"model/best_model_DLinear_len24_alpha1.0None.pth"
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.to(device)
+    model.eval()
+    results = evaluate_model(model,test_loader,device,split_info)
+    y_true = results['raw_data']['actuals'] # (N, 24, 6)
+    y_pred = results['raw_data']['preds']   # (N, 24, 6)
+    target_names = split_info.get('target_names', [])
+    
+    for i in [0,10,20,50,100]:
+        plot_all_targets_sample(y_true, y_pred, target_names, sample_idx=i)
+
     print(f"All plots saved to '{FIGURE_DIR}' folder.")
+
