@@ -7,15 +7,12 @@ import warnings
 from torch.utils.data import DataLoader, Dataset
 from sklearn.preprocessing import StandardScaler
 
-# --- IMPORT MODULES ---
-# Đảm bảo bạn đã có các file này trong folder src/
 from src.decomposition import run_ceemdan
 from src.ltsf_linear import NLinear, DLinear 
 from src.feature_engineering import create_change_aware_features
 from src.metrics import metric, EventWeightedLoss , EarlyStopping
 from src.path import DATA_DIR, SERIES_DIR, CHECKPOINTS_DIR, CACHE_DIR
 
-# Thử import hàm vẽ (nếu có)
 try:
     from plot_visual import plot_all
 except ImportError:
@@ -23,7 +20,6 @@ except ImportError:
 
 warnings.filterwarnings("ignore")
 
-# --- CẤU HÌNH HỆ THỐNG ---
 BASE_CONFIG = {
     'seq_len': 168,      
     'batch_size': 64,
@@ -42,7 +38,6 @@ PRED_LENS = [6, 12, 24, 48, 96, 168]
 MODELS = ['DLinear', 'NLinear']
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# --- DATASET CLASS ---
 class FeatureDataset(Dataset):
     def __init__(self, data, seq_len, pred_len, flag='train', flag_col_index=-1):
         self.seq_len = seq_len
@@ -83,7 +78,6 @@ class FeatureDataset(Dataset):
         inv = scaler.inverse_transform(dummy)
         return inv[:, 0]
 
-# --- TRAINING FUNCTION ---
 def train_and_evaluate(model_name, pred_len, df_processed, scaler):
     in_channels = df_processed.shape[1]
     
